@@ -1,0 +1,102 @@
+==Overview==
+Lua binding for the SHA-256/384/512 BSD-licensed C implementation by Aaron Gifford[http://www.aarongifford.com/computers/sha.html [1]].<br>Also contains the generic HMAC implementation per [http://tools.ietf.org/html/rfc2104 rfc2104] plus HMAC-SHA256/384/512 variants, and HMAC-MD5 (requires [http://www.keplerproject.org/md5/ md5]).
+
+==Status==
+  * v0.2 (beta quality)
+  * for Lua 5.1
+  * SHA tested with original test vectors on Win32 and 32bit and 64bit Linux
+  * HMAC-SHA tested with rfc4231 test vectors on Win32 and 32bit and 64bit Linux
+
+==Changelog==
+  * v0.2 - (26 Nov 2010) added HMAC modules and hex output variants
+  * v0.1 - (24 Nov 2010) initial release
+
+==Build & Install==
+  * Windows 32bit / binary
+    * `>luarocks install http://sha2.googlecode.com/hg/sha2-0.2.0-1.win32-x86.rock`
+
+  * Windows 32bit / VC++, using `LuaRocks`
+    * copy [http://msinttypes.googlecode.com/svn/trunk/inttypes.h inttypes.h] to your VC++ include dir
+    * open up a VC++ command-line environment
+    * `>luarocks install http://sha2.googlecode.com/hg/sha2-0.2.0-1.rockspec`
+
+  * Windows 32bit / minGW
+    * checkout the sources: `>hg clone https://sha2.googlecode.com/hg/ sha2`
+    * edit `build-mingw.bat` and change LUA_INC and LUA_LIB
+    * `>build-mingw.bat`
+    * copy `sha2lib.dll` somewhere in your `package.cpath`
+
+  * Linux 32bit & amd64 / GCC
+    * `$luarocks install http://sha2.googlecode.com/hg/sha2-0.2.0-1.rockspec`
+  
+After installation, please run `test_sha2.lua` and `test_hmac.lua` (the later needs `LuaSocket` and `md5`).
+
+==Usage==
+{{{
+local function bintohex(s)
+  return (s:gsub('(.)', function(c)
+    return string.format('%02x', string.byte(c))
+  end))
+end 
+
+require "sha2"
+
+print(sha2.sha256hex("And so we say goodbye to our beloved pet, Nibbler, who's gone to a place where I, too, hope one day to go. The toilet."))
+-- prints 3c4ba860b4917a85b075f5e0c8cebe65bd1646d0d5ac3326a974ae965a44a5e1
+
+require "hmac.sha2"
+
+print(bintohex(hmac.sha256("what do ya want for nothing?", "Jefe"))) --Jefe is the key
+-- prints 5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843
+
+require "hmac"
+require "hmac.md5" --get md5 from LuaRocks
+
+print(bintohex(hmac.md5("what do ya want for nothing?", "Jefe"))) --Jefe is the key
+-- prints 750c783e6ab0b503eaa86e310a5db738
+}}}
+
+==Reference==
+{{{
+   require "sha2"
+
+   sha2.sha256(message) -> SHA256 binary hash string
+   sha2.sha384(message) -> SHA348 binary hash string
+   sha2.sha512(message) -> SHA512 binary hash string
+
+   sha2.sha256hex(message) -> SHA256 hex hash string
+   sha2.sha384hex(message) -> SHA348 hex hash string
+   sha2.sha512hex(message) -> SHA512 hex hash string
+
+   require "hmac"
+
+   hmac.compute(key, message, hash_function, blocksize, [opad], [ipad]) -> HMAC string, opad, ipad
+   hmac.new(hash_function, block_size) -> function(message, key) -> HMAC string
+
+   require "hmac.sha2"
+
+   hmac.sha256(message, key) -> HMAC-SHA256 binary string
+   hmac.sha348(message, key) -> HMAC-SHA348 binary string
+   hmac.sha512(message, key) -> HMAC-SHA512 binary string
+
+   require "hmac.md5"
+
+   hmac.md5(message, key) -> HMAC-MD5 binary string
+}}}
+
+==TODO==
+  * if a function is passed instead of a string, it will be called repeatedly and it's output will be consumed until it returns nil or nothing (that is, make it work with a LTN12 source).
+  * have it put in the main LuaRocks repository.
+  * talk about merging with md5 library.
+
+==Contact==
+  * `cosmin.apreutesei@gmail.com`
+  * feedback welcome! use the Issues tab for bug reporting, thanks!
+
+==Alternative implementations==
+  * [http://lua-users.org/wiki/SecureHashAlgorithm SHA256 in pure-Lua], for Lua 5.2, using the new bit32 built-in library
+  * [http://www.gammon.com.au/mushclient/mushclient.htm mushclient] contains a wrapper of a GPL'ed C implementation
+  * [http://luacrypto.luaforge.net/ LuaCrypto] can do SHA-2 as it binds to OpenSSL (not tested)
+  * [http://www.eder.us/projects/lcrypt/ lcrypt] can do SHA-2 as it binds to [http://libtom.org/ LibTom] (not tested)
+  * [http://www.tecgraf.puc-rio.br/~lhf/ftp/lua/#lmd5 lmd5] can do SHA-2 as it binds to OpenSSL (not tested)
+  * [http://lua-users.org/files/wiki_insecure/users/tnodir/ luamhash] can do SHA-2 as it binds to [http://mhash.sourceforge.net/ mhash] (not tested; Lua 5.0)
